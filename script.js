@@ -1,4 +1,3 @@
-
 // Mobile Navigation Toggle
 const hamburger = document.querySelector('.hamburger');
 const navMenu = document.querySelector('.nav-menu');
@@ -50,7 +49,20 @@ function updateActiveNavigation() {
     });
 }
 
-window.addEventListener('scroll', updateActiveNavigation);
+// Throttle scroll events for better performance
+function throttle(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+window.addEventListener('scroll', throttle(updateActiveNavigation, 100));
 
 // Intersection Observer for fade-in animations
 const observerOptions = {
@@ -75,15 +87,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Header background opacity on scroll
-window.addEventListener('scroll', () => {
-    const header = document.querySelector('.header');
-    if (window.scrollY > 100) {
+// Combined scroll handler for better performance
+const header = document.querySelector('.header');
+const hero = document.querySelector('.hero');
+
+const handleScroll = throttle(() => {
+    const scrolled = window.pageYOffset;
+    
+    // Header background opacity
+    if (scrolled > 100) {
         header.style.background = 'rgba(255, 255, 255, 0.98)';
     } else {
         header.style.background = 'rgba(255, 255, 255, 0.95)';
     }
-});
+    
+    // Parallax effect (reduced intensity for better performance)
+    if (hero) {
+        hero.style.transform = `translateY(${scrolled * -0.2}px)`;
+    }
+}, 16); // ~60fps
+
+window.addEventListener('scroll', handleScroll, { passive: true });
 
 // Dynamic typing effect for hero subtitle (optional enhancement)
 function typeWriter(element, text, speed = 100) {
@@ -101,27 +125,17 @@ function typeWriter(element, text, speed = 100) {
     type();
 }
 
-// Initialize typing effect when page loads
-window.addEventListener('load', () => {
+// Initialize typing effect when page loads (optimized)
+window.addEventListener('DOMContentLoaded', () => {
     const subtitle = document.querySelector('.hero-subtitle');
     const originalText = subtitle.textContent;
-    typeWriter(subtitle, originalText, 80);
+    // Reduce typing speed for faster initial load
+    setTimeout(() => typeWriter(subtitle, originalText, 50), 500);
 });
 
 // Add loading animation
 window.addEventListener('load', () => {
     document.body.classList.add('loaded');
-});
-
-// Parallax effect for hero section
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const hero = document.querySelector('.hero');
-    const rate = scrolled * -0.5;
-    
-    if (hero) {
-        hero.style.transform = `translateY(${rate}px)`;
-    }
 });
 
 // Skills animation on scroll
